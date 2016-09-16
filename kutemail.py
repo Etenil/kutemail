@@ -4,12 +4,16 @@ import threading
 from PyQt5 import QtWidgets
 from PyQt5 import uic
 
+from imaplib import IMAP4_SSL
+
 class MailRetriever(threading.Thread):
+    imap_backend = None
     onFinish = None
     
     def __init__(self, onFinish):
         super(MailRetriever, self).__init__()
         self.onFinish = onFinish
+        self.imap_backend = IMAP4_SSL(host="imap.gmail.com", 
     
     def run(self):
         sleep(3)
