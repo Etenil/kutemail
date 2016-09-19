@@ -11,26 +11,32 @@ from pprint import pprint
 
 class Account():
     config = {}
+    config_path = ''
     
     def __init__(self):
-        self.config = pickle.load(open(os.path.expanduser("~/.config/kutemail.rc"), "rb"))
+        self.config_path = os.path.expanduser("~/.config/kutemail.rc")
+        self.load_config()
+    
+    def load_config(self):
+        if os.path.isfile(self.config_path):
+            self.config = pickle.load(open(self.config_path, "rb"))
     
     def save(self):
-        pickle.dump(self.config, open(os.path.expanduser("~/.config/kutemail.rc"), "wb"))
+        pickle.dump(self.config, open(self.config_path, "wb"))
+    
+    def is_loaded(self):
+        return self.config != {}
 
-class MailRetriever(threading.Thread):
+class MailRetriever():
     imap_backend = None
+    folders = None
     
-    def __init__(self):
-        super(MailRetriever, self).__init__()
+    def __init__(self, config):
         self.imap_backend = IMAP4_SSL(host="imap.gmail.com")
-        self.imap_backend.login()
-        pprint(self.imap_backend.list())
-        print("\n")
+        self.imap_backend.login(config["username"], config["password"])
     
-    def refresh(self, onFinish):
-        sleep(3)
-        onFinish()
+    def refresh_mail(self):
+        self.folders = self.imap_backend.list()
 
 class ComposeWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -42,49 +48,55 @@ class ComposeWindow(QtWidgets.QMainWindow):
         self.close()
 
 class AccountDialog(QtWidgets.QDialog):
-    def __init__(self):
-        super(AccountDialog, self).__init__()
+    def __init__(self, parent = None):
+        super(AccountDialog, self).__init__(parent)
         uic.loadUi('accountdialog.ui', self)
     
-    def accept(self):
-        pass
-    
-    def reject(self):
-        pass
+    @staticmethod
+    def getAccountDetails(username='', password='', parent=None):
+        dialog = AccountDialog(parent)
+        dialog.txtUserName.setText(username)
+        result = dialog.exec_()
+        return {
+            "accepted": result == QtWidgets.QDialog.Accepted,
+            "username": dialog.txtUserName.text(),
+            "password": dialog.txtPassword.text()
+        }
 
 class MainWindow(QtWidgets.QMainWindow):
-    refreshing = False
     mail_retriever = None
     account = None
     
     def __init__(self):
         super(MainWindow, self).__init__()
         uic.loadUi('mainwindow.ui', self)
-        self.mail_retriever = MailRetriever()
         self.account = Account()
 
     def advanceSlider(self):
         self.ui.progressBar.setValue(self.ui.progressBar.value() + 1)
     
     def onComposeMail(self):
-        print('compose')
         self.compose = ComposeWindow()
         self.compose.show()
     
     def onRefresh(self):
-        if not self.refreshing:
-            self.refreshing = True
-            self.statusbar.showMessage("Refreshing...")
-            self.mail_retriever.refresh(self.onRefreshEnd())
-            
-    def onRefreshEnd(self):
-        self.refreshing = False
+        self.statusbar.showMessage("Refreshing...")
+        self.mail_retriever.refresh_mail()
         self.statusbar.showMessage("")
     
     def showEvent(self, event):
-        if self.acccount == None:
-            diag = AccountDialog()
-            diag.show()
+        if not self.account.is_loaded():
+            info = AccountDialog.getAccountDetails()
+            
+            if not info["accepted"]:
+                self.close()
+            
+            self.account.config = {
+                "username": info["username"],
+                "password": info["password"]
+            }
+            self.account.save()
+        self.mail_retriever = MailRetriever(self.account.config)
 
 app = QtWidgets.QApplication(sys.argv)
 
