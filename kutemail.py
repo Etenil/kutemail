@@ -7,6 +7,7 @@ from imaplib import IMAP4_SSL
 import pickle
 import os
 import re
+from email import parser as emailparser
 
 from pprint import pprint
 
@@ -44,6 +45,23 @@ class MailRetriever():
             for raw_folder in raw_folders[1]:
                 folder_info = imap_folder_reg.match(raw_folder)
                 self.folders.append((folder_info.group(1), folder_info.group(2)))
+    
+    def list_mails(self, folder):
+        self.imap_backend.select(folder)
+        result, data = self.imap_backend.uid("search", None, "ALL")
+        mailparser = emailparser.Parser()
+        mails = []
+        uid_block = data[0].split()
+        #for uid_block in data:
+        for uid in uid_block[0:3]:
+            result, mail_data = self.imap_backend.fetch(uid, "(RFC822)")
+            if result == "OK":
+                try:
+                    parsed_mail = mailparser.parsestr(mail_data[0][1].decode("utf-8"))
+                    mails.append((uid, parsed_mail))
+                except UnicodeDecodeError:
+                    pass
+        return mails
 
 class ComposeWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -92,6 +110,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statusbar.showMessage("")
         self.refreshTreeView()
     
+    def onFolderSelected(self, folder):
+        emails = self.mail_retriever.list_mails(folder.text(0))
+        subjects = []
+        for email in emails:
+            subjects.append(email[1].get('subject'))
+        self.listEmails.clear()
+        self.listEmails.addItems(subjects)
+    
+    def onMailSelected(self):
+        pass
+    
     def refreshTreeView(self):
         items = []
         for folder in self.mail_retriever.folders:
@@ -111,6 +140,7 @@ class MainWindow(QtWidgets.QMainWindow):
             }
             self.account.save()
         self.mail_retriever = MailRetriever(self.account.config)
+        self.onRefresh()
 
 app = QtWidgets.QApplication(sys.argv)
 

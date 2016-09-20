@@ -59,10 +59,10 @@
        </widget>
       </item>
       <item>
-       <widget class="QTableWidget" name="tableWidget"/>
+       <widget class="QListWidget" name="listEmails"/>
       </item>
       <item>
-       <widget class="QTextBrowser" name="txtViewMailPreview"/>
+       <widget class="QTextBrowser" name="emailPreview"/>
       </item>
      </layout>
     </item>
@@ -223,9 +223,43 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>treeMailWidget</sender>
+   <signal>itemClicked(QTreeWidgetItem*,int)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>onFolderSelected()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>157</x>
+     <y>291</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>225</x>
+     <y>-8</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>listEmails</sender>
+   <signal>itemClicked(QListWidgetItem*)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>onMailSelected()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>264</x>
+     <y>238</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>421</x>
+     <y>-11</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>onComposeMail()</slot>
   <slot>onRefresh()</slot>
+  <slot>onFolderSelected()</slot>
+  <slot>onMailSelected()</slot>
  </slots>
 </ui>
