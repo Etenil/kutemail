@@ -6,6 +6,7 @@ from PyQt5 import uic
 from imaplib import IMAP4_SSL
 import pickle
 import os
+import re
 
 from pprint import pprint
 
@@ -29,14 +30,20 @@ class Account():
 
 class MailRetriever():
     imap_backend = None
-    folders = None
+    folders = []
     
     def __init__(self, config):
         self.imap_backend = IMAP4_SSL(host="imap.gmail.com")
         self.imap_backend.login(config["username"], config["password"])
     
     def refresh_mail(self):
-        self.folders = self.imap_backend.list()
+        imap_folder_reg = re.compile(b'^\(.+\) "(.+)" "(.+)"$')
+        self.folders = []
+        raw_folders = self.imap_backend.list()
+        if raw_folders[0] == 'OK':
+            for raw_folder in raw_folders[1]:
+                folder_info = imap_folder_reg.match(raw_folder)
+                self.folders.append((folder_info.group(1), folder_info.group(2)))
 
 class ComposeWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -83,6 +90,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statusbar.showMessage("Refreshing...")
         self.mail_retriever.refresh_mail()
         self.statusbar.showMessage("")
+        self.refreshTreeView()
+    
+    def refreshTreeView(self):
+        items = []
+        for folder in self.mail_retriever.folders:
+            items.append(QtWidgets.QTreeWidgetItem([folder[1].decode("utf-8")], 0))
+        self.treeMailWidget.insertTopLevelItems(0, items)
     
     def showEvent(self, event):
         if not self.account.is_loaded():
