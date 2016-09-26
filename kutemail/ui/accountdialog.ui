@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>Account details</string>
   </property>
+  <property name="windowIcon">
+   <iconset theme="kmail"/>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
     <layout class="QFormLayout" name="formLayout">
@@ -64,7 +67,8 @@
        </property>
        <property name="icon">
         <iconset theme="dialog-cancel">
-         <normaloff>.</normaloff>.</iconset>
+         <normaloff/>
+        </iconset>
        </property>
       </widget>
      </item>
@@ -75,7 +79,8 @@
        </property>
        <property name="icon">
         <iconset theme="dialog-ok-apply">
-         <normaloff>.</normaloff>.</iconset>
+         <normaloff/>
+        </iconset>
        </property>
       </widget>
      </item>

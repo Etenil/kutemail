@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>New Email</string>
   </property>
+  <property name="windowIcon">
+   <iconset theme="kmail"/>
+  </property>
   <property name="toolButtonStyle">
    <enum>Qt::ToolButtonTextBesideIcon</enum>
   </property>
@@ -29,7 +32,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>27</height>
+     <height>31</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -62,7 +65,8 @@
   <action name="actionSend">
    <property name="icon">
     <iconset theme="mail-send">
-     <normaloff>.</normaloff>.</iconset>
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>&amp;Send</string>
@@ -73,7 +77,9 @@
   </action>
   <action name="actionDiscard">
    <property name="icon">
-    <iconset theme="dialog-cancel"/>
+    <iconset theme="dialog-cancel">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Discard</string>

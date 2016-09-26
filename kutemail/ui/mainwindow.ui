@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>Kutemail</string>
   </property>
+  <property name="windowIcon">
+   <iconset theme="kmail"/>
+  </property>
   <property name="toolButtonStyle">
    <enum>Qt::ToolButtonTextBesideIcon</enum>
   </property>
@@ -45,7 +48,9 @@
              <string>Reply</string>
             </property>
             <property name="icon">
-             <iconset theme="mail-reply-sender"/>
+             <iconset theme="mail-reply-sender">
+              <normaloff/>
+             </iconset>
             </property>
            </widget>
           </item>
@@ -55,7 +60,9 @@
              <string>PushButton</string>
             </property>
             <property name="icon">
-             <iconset theme="mail-reply-all"/>
+             <iconset theme="mail-reply-all">
+              <normaloff/>
+             </iconset>
             </property>
            </widget>
           </item>
@@ -65,7 +72,9 @@
              <string>PushButton</string>
             </property>
             <property name="icon">
-             <iconset theme="mail-forward"/>
+             <iconset theme="mail-forward">
+              <normaloff/>
+             </iconset>
             </property>
            </widget>
           </item>
@@ -75,7 +84,9 @@
              <string>Delete</string>
             </property>
             <property name="icon">
-             <iconset theme="edit-delete"/>
+             <iconset theme="edit-delete">
+              <normaloff/>
+             </iconset>
             </property>
            </widget>
           </item>
