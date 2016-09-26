@@ -1,15 +1,20 @@
+import os
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import uic
 import quopri
 
-from . import config
-import mail
+from .config import Account
+from .mail import MailRetriever
+
+def ui_path(filename):
+    basepath = os.path.dirname(os.path.realpath(__file__))
+    return os.path.join(basepath, 'ui', filename)
 
 class ComposeWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(ComposeWindow, self).__init__()
-        uic.loadUi('composewindow.ui', self)
+        uic.loadUi(ui_path('composewindow.ui'), self)
     
     def onSend(self):
         print('sending...')
@@ -18,7 +23,7 @@ class ComposeWindow(QtWidgets.QMainWindow):
 class AccountDialog(QtWidgets.QDialog):
     def __init__(self, parent = None):
         super(AccountDialog, self).__init__(parent)
-        uic.loadUi('accountdialog.ui', self)
+        uic.loadUi(ui_path('accountdialog.ui'), self)
     
     @staticmethod
     def getAccountDetails(username='', password='', parent=None):
@@ -38,8 +43,8 @@ class MainWindow(QtWidgets.QMainWindow):
     
     def __init__(self):
         super(MainWindow, self).__init__()
-        uic.loadUi('mainwindow.ui', self)
-        self.account = config.Account()
+        uic.loadUi(ui_path('mainwindow.ui'), self)
+        self.account = Account()
 
     def advanceSlider(self):
         self.ui.progressBar.setValue(self.ui.progressBar.value() + 1)
@@ -110,5 +115,5 @@ class MainWindow(QtWidgets.QMainWindow):
                 "password": info["password"]
             }
             self.account.save()
-        self.mail_retriever = mail.MailRetriever(self.account.config)
+        self.mail_retriever = MailRetriever(self.account.config)
         self.onRefresh()
