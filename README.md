@@ -2,6 +2,8 @@
 
 A simple and easy-to-use email client for KDE or Qt.
 
+![screenshot of Kutemail in action](https://raw.githubusercontent.com/Etenil/kutemail/master/kutemail-screenshot.png)
+
 ## Current state
 
 What works, what doesn't and what to expect.
