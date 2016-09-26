@@ -19,32 +19,6 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
-      <item>
-       <widget class="QPushButton" name="btnCompose">
-        <property name="text">
-         <string>Compose</string>
-        </property>
-        <property name="icon">
-         <iconset theme="document-new">
-          <normaloff>.</normaloff>.</iconset>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="btnRefresh">
-        <property name="text">
-         <string>Refresh</string>
-        </property>
-        <property name="icon">
-         <iconset theme="view-refresh">
-          <normaloff>.</normaloff>.</iconset>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
      <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,2,3">
       <property name="sizeConstraint">
        <enum>QLayout::SetMaximumSize</enum>
@@ -62,28 +36,59 @@
        <widget class="QListWidget" name="listEmails"/>
       </item>
       <item>
-       <widget class="QTextBrowser" name="emailPreview"/>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QPushButton" name="btnReply">
+            <property name="text">
+             <string>Reply</string>
+            </property>
+            <property name="icon">
+             <iconset theme="mail-reply-sender"/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnReplyAll">
+            <property name="text">
+             <string>PushButton</string>
+            </property>
+            <property name="icon">
+             <iconset theme="mail-reply-all"/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnForward">
+            <property name="text">
+             <string>PushButton</string>
+            </property>
+            <property name="icon">
+             <iconset theme="mail-forward"/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnDelete">
+            <property name="text">
+             <string>Delete</string>
+            </property>
+            <property name="icon">
+             <iconset theme="edit-delete"/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QTextBrowser" name="emailPreview"/>
+        </item>
+       </layout>
       </item>
      </layout>
     </item>
    </layout>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1096</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuFile">
-    <property name="title">
-     <string>Fi&amp;le</string>
-    </property>
-    <addaction name="actionQuit"/>
-   </widget>
-   <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
@@ -113,7 +118,8 @@
   <action name="actionCompose">
    <property name="icon">
     <iconset theme="document-new">
-     <normaloff>.</normaloff>.</iconset>
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Compose</string>
@@ -128,7 +134,8 @@
   <action name="actionRefresh">
    <property name="icon">
     <iconset theme="view-refresh">
-     <normaloff>.</normaloff>.</iconset>
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Refresh</string>
@@ -156,38 +163,6 @@
     <hint type="destinationlabel">
      <x>146</x>
      <y>66</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>btnCompose</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>onComposeMail()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>191</x>
-     <y>89</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>274</x>
-     <y>0</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>btnRefresh</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>onRefresh()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>682</x>
-     <y>92</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>619</x>
-     <y>0</y>
     </hint>
    </hints>
   </connection>
