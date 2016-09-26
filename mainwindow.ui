@@ -45,7 +45,7 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,2,2">
+     <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,2,3">
       <property name="sizeConstraint">
        <enum>QLayout::SetMaximumSize</enum>
       </property>
@@ -260,6 +260,6 @@
   <slot>onComposeMail()</slot>
   <slot>onRefresh()</slot>
   <slot>onFolderSelected()</slot>
-  <slot>onMailSelected()</slot>
+  <slot>onMailSelected(item)</slot>
  </slots>
 </ui>

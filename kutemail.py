@@ -2,6 +2,7 @@ import sys
 from time import sleep
 import threading
 from PyQt5 import QtWidgets
+from PyQt5 import QtGui
 from PyQt5 import uic
 from imaplib import IMAP4_SSL
 import pickle
@@ -53,7 +54,7 @@ class MailRetriever():
         mails = []
         uid_block = data[0].split()
         #for uid_block in data:
-        for uid in uid_block[0:3]:
+        for uid in uid_block[0:20]:
             result, mail_data = self.imap_backend.fetch(uid, "(RFC822)")
             if result == "OK":
                 try:
@@ -91,6 +92,7 @@ class AccountDialog(QtWidgets.QDialog):
 class MainWindow(QtWidgets.QMainWindow):
     mail_retriever = None
     account = None
+    emails = []
     
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -111,15 +113,37 @@ class MainWindow(QtWidgets.QMainWindow):
         self.refreshTreeView()
     
     def onFolderSelected(self, folder):
-        emails = self.mail_retriever.list_mails(folder.text(0))
+        self.emails = self.mail_retriever.list_mails(folder.text(0))
         subjects = []
-        for email in emails:
+        for email in self.emails:
             subjects.append(email[1].get('subject'))
         self.listEmails.clear()
         self.listEmails.addItems(subjects)
     
-    def onMailSelected(self):
-        pass
+    def onMailSelected(self, item):
+        index = item.listWidget().row(item)
+        email = self.emails[index][1]
+        document = QtGui.QTextDocument()
+        if email.is_multipart():
+            html = None
+            plain = None
+            for payload in email.walk():
+                print(payload.get_content_type())
+                if payload.get_content_type() == 'text/html' and html == None:
+                    html = payload.get_payload(decode=True).decode("utf-8")
+                if payload.get_content_type() == 'text/plain' and plain == None:
+                    plain = payload.get_payload(decode=True).decode("utf-8")
+                if plain != None and html != None:
+                    break;
+            
+            if html != None:
+                document.setHtml(html)
+            else:
+                document.setPlainText(plain)
+        else:
+            document.setPlainText(email.get_payload(decode=True).decode("utf-8"))
+        
+        self.emailPreview.setDocument(document)
     
     def refreshTreeView(self):
         items = []
