@@ -9,8 +9,9 @@ import pickle
 import os
 import re
 from email import parser as emailparser
+import quopri
 
-from pprint import pprint
+#from pprint import pprint
 
 class Account():
     config = {}
@@ -116,7 +117,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.emails = self.mail_retriever.list_mails(folder.text(0))
         subjects = []
         for email in self.emails:
-            subjects.append(email[1].get('subject'))
+            subjects.append(quopri.decodestring(email[1].get('subject')).decode("utf-8"))
         self.listEmails.clear()
         self.listEmails.addItems(subjects)
     
@@ -128,7 +129,6 @@ class MainWindow(QtWidgets.QMainWindow):
             html = None
             plain = None
             for payload in email.walk():
-                print(payload.get_content_type())
                 if payload.get_content_type() == 'text/html' and html == None:
                     html = payload.get_payload(decode=True).decode("utf-8")
                 if payload.get_content_type() == 'text/plain' and plain == None:
@@ -138,10 +138,16 @@ class MainWindow(QtWidgets.QMainWindow):
             
             if html != None:
                 document.setHtml(html)
+            if "DOCTYPE" in plain or "doctype" in plain:
+                document.setHtml(plain)
             else:
                 document.setPlainText(plain)
         else:
-            document.setPlainText(email.get_payload(decode=True).decode("utf-8"))
+            plain = email.get_payload(decode=True).decode("utf-8")
+            if "DOCTYPE" in plain or "doctype" in plain:
+                document.setHtml(plain)
+            else:
+                document.setPlainText(plain)
         
         self.emailPreview.setDocument(document)
     
