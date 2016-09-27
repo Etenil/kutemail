@@ -1,25 +1,34 @@
+import os
 from imaplib import IMAP4_SSL
 import re
+import pickle
+import time
 from email import parser as emailparser
 
-class MailRetriever():
+from pprint import pprint
+
+class ImapMailRetriever():
+    """
+    Retrieve emails through IMAP
+    """
     imap_backend = None
-    folders = []
     
-    def __init__(self, config):
-        self.imap_backend = IMAP4_SSL(host="imap.gmail.com")
-        self.imap_backend.login(config["username"], config["password"])
+    def __init__(self, host, username, password):
+        self.imap_backend = IMAP4_SSL(host=host)
+        self.imap_backend.login(username, password)
     
     def refresh_mail(self):
         imap_folder_reg = re.compile(b'^\(.+\) "(.+)" "(.+)"$')
-        self.folders = []
+        folders = []
         raw_folders = self.imap_backend.list()
         if raw_folders[0] == 'OK':
             for raw_folder in raw_folders[1]:
                 folder_info = imap_folder_reg.match(raw_folder)
-                self.folders.append((folder_info.group(1), folder_info.group(2)))
+                folders.append((folder_info.group(1), folder_info.group(2)))
+        
+        return folders
     
-    def list_mails(self, folder):
+    def list_mail(self, folder):
         self.imap_backend.select(folder)
         result, data = self.imap_backend.uid("search", None, "ALL")
         mailparser = emailparser.Parser()
@@ -35,3 +44,89 @@ class MailRetriever():
                 except UnicodeDecodeError:
                     pass
         return mails
+
+class MailCache():
+    """
+    Emails cache. Is totally independent from the back-end
+    """
+    retriever = None
+    cache_path = ''
+    state_path = ''
+    cache_state = {}
+    MAX_AGE = 3600
+    
+    def __init__(self, cache_path, retriever):
+        self.retriever = retriever
+        self.cache_path = cache_path
+        self.state_path = os.path.join(cache_path, 'cache.state')
+        
+        if not os.path.isdir(self.cache_path):
+            os.makedirs(self.cache_path)
+        
+        self._load_state()
+    
+    def list_folders(self, force_refresh):
+        dirs = [d for d in os.listdir(self.cache_path) if os.path.isdir(os.path.join(self.cache_path, d))]
+        
+        if force_refresh or self._is_stale('/'):
+            new_dirs = self.retriever.refresh_mail()
+            for new_dir in new_dirs:
+                dir_name = new_dir[1].decode('utf-8')
+                dir_path = os.path.join(self.cache_path, dir_name)
+                if not os.path.isdir(dir_path):
+                    os.makedirs(dir_path)
+                    dirs.append(dir_name)
+                    self._renew_state(dir_name)
+            self._renew_state('/')
+        self._commit_state()
+        
+        return dirs
+    
+    def list_mail(self, folder, force_refresh):
+        folder_path = os.path.join(self.cache_path, folder)
+        mails = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+        if self._is_stale(folder) or force_refresh == True:
+            mails = self.retriever.list_mail(folder)
+        # TODO Implementation
+        return []
+    
+    def _is_stale(self, folder):
+        if folder in self.cache_state:
+            return self.cache_state[folder] > self.MAX_AGE
+        else:
+            return True
+    
+    def _renew_state(self, folder):
+        self.cache_state[folder] = time.time()
+    
+    def _load_state(self):
+        if os.path.isfile(self.state_path):
+            with open(self.state_path, 'rb') as cache:
+                self.cache_state = pickle.load(cache)
+    
+    def _commit_state(self):
+        with open(self.state_path, 'wb') as cache:
+            pickle.dump(self.cache_state, cache)
+
+class MailAccount():
+    """
+    Abstracts fetching / sending and caching to an email account
+    """
+    cache = None
+    
+    def __init__(self, config):
+        retriever = None
+        if config['protocol'] == "IMAP":
+            retriever = ImapMailRetriever(config['host'], config['username'], config['password'])
+        else:
+            raise "ARGH! Unknown protocol!"
+        
+        self.cache = MailCache(config['cache_path'], retriever)
+    
+    def list_folders(self, force_refresh=False):
+        """Lists the available IMAP folders"""
+        return self.cache.list_folders(force_refresh)
+    
+    def list_mail(self, folder, force_refresh=False):
+        """Lists emails in a folder, from cache if available"""
+        return self.cache.list_mail(folder, force_refresh)

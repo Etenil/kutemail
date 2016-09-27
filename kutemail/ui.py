@@ -4,8 +4,8 @@ from PyQt5 import QtGui
 from PyQt5 import uic
 import quopri
 
-from .config import Account
-from .mail import MailRetriever
+from .config import Config
+from .mail import MailAccount
 
 def ui_path(filename):
     basepath = os.path.dirname(os.path.realpath(__file__))
@@ -38,13 +38,14 @@ class AccountDialog(QtWidgets.QDialog):
 
 class MainWindow(QtWidgets.QMainWindow):
     mail_retriever = None
-    account = None
+    config = None
+    folders = []
     emails = []
     
     def __init__(self):
         super(MainWindow, self).__init__()
         uic.loadUi(ui_path('mainwindow.ui'), self)
-        self.account = Account()
+        self.config = Config()
 
     def advanceSlider(self):
         self.ui.progressBar.setValue(self.ui.progressBar.value() + 1)
@@ -55,7 +56,7 @@ class MainWindow(QtWidgets.QMainWindow):
     
     def onRefresh(self):
         self.statusbar.showMessage("Refreshing...")
-        self.mail_retriever.refresh_mail()
+        self.folders = self.mail_retriever.list_folders(force_refresh=True)
         self.statusbar.showMessage("")
         self.refreshTreeView()
     
@@ -99,21 +100,19 @@ class MainWindow(QtWidgets.QMainWindow):
     
     def refreshTreeView(self):
         items = []
-        for folder in self.mail_retriever.folders:
-            items.append(QtWidgets.QTreeWidgetItem([folder[1].decode("utf-8")], 0))
+        for folder in self.folders:
+            items.append(QtWidgets.QTreeWidgetItem([folder], 0))
         self.treeMailWidget.insertTopLevelItems(0, items)
     
     def showEvent(self, event):
-        if not self.account.is_loaded():
+        if not self.config.is_loaded():
             info = AccountDialog.getAccountDetails()
             
             if not info["accepted"]:
                 self.close()
             
-            self.account.config = {
-                "username": info["username"],
-                "password": info["password"]
-            }
-            self.account.save()
-        self.mail_retriever = MailRetriever(self.account.config)
+            self.config.config['username'] = info['username']
+            self.config.config['password'] = info['password']
+            self.config.save()
+        self.mail_retriever = MailAccount(self.config.as_dict())
         self.onRefresh()
