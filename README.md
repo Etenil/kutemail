@@ -19,6 +19,15 @@ What works, what doesn't and what to expect.
 To install this software, make sure you have python3 (I use 3.5, not sure if previous versions will work)
 pyqt5 and imaplib installed, then you should be fine.
 
+Alternatively, you can use pip for everything except PyQt5, and install in a virtual environment like so:
+
+```
+$ pyvenv venv
+$ source venv/bin/activate
+(venv)$ sed -i 's/packages = false/packages = true/' venv/pyvenv.cfg
+(venv)$ pip install -r requirements.txt
+```
+
 ## Running
 
 To run the client, use this command:
