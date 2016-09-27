@@ -101,7 +101,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def refreshTreeView(self):
         items = []
         for folder in self.folders:
-            items.append(QtWidgets.QTreeWidgetItem([folder], 0))
+            folder_item = QtWidgets.QTreeWidgetItem([folder], 0)
+            folder_item.setIcon(0, QtGui.QIcon.fromTheme('folder-mail'))
+            items.append(folder_item)
         self.treeMailWidget.insertTopLevelItems(0, items)
     
     def showEvent(self, event):

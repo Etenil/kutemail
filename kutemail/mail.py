@@ -66,21 +66,19 @@ class MailCache():
         self._load_state()
     
     def list_folders(self, force_refresh):
-        dirs = [d for d in os.listdir(self.cache_path) if os.path.isdir(os.path.join(self.cache_path, d))]
+        folders = [d for d in os.listdir(self.cache_path) if os.path.isdir(os.path.join(self.cache_path, d))]
         
         if force_refresh or self._is_stale('/'):
-            new_dirs = self.retriever.refresh_mail()
-            for new_dir in new_dirs:
-                dir_name = new_dir[1].decode('utf-8')
-                dir_path = os.path.join(self.cache_path, dir_name)
-                if not os.path.isdir(dir_path):
-                    os.makedirs(dir_path)
-                    dirs.append(dir_name)
-                    self._renew_state(dir_name)
+            new_folders = self.retriever.refresh_mail()
+            for new_folder in new_folders:
+                new_folder_name = new_folder[1].decode('utf-8').replace('/', '%')
+                if not new_folder_name in folders:
+                    folders.append(new_folder_name)
+                self._cache_folder(new_folder_name)
             self._renew_state('/')
         self._commit_state()
         
-        return dirs
+        return folders
     
     def list_mail(self, folder, force_refresh):
         folder_path = os.path.join(self.cache_path, folder)
@@ -95,6 +93,12 @@ class MailCache():
             return self.cache_state[folder] > self.MAX_AGE
         else:
             return True
+    
+    def _cache_folder(self, folder):
+        folder_path = os.path.join(self.cache_path, folder)
+        if not os.path.isdir(folder_path):
+            os.makedirs(folder_path)
+            self._renew_state(folder)
     
     def _renew_state(self, folder):
         self.cache_state[folder] = time.time()
