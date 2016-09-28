@@ -66,19 +66,17 @@ class MailCache():
         self._load_state()
     
     def list_folders(self, force_refresh):
-        folders = [d for d in os.listdir(self.cache_path) if os.path.isdir(os.path.join(self.cache_path, d))]
-        
         if force_refresh or self._is_stale('/'):
-            new_folders = self.retriever.refresh_mail()
-            for new_folder in new_folders:
-                new_folder_name = new_folder[1].decode('utf-8').replace('/', '%')
-                if not new_folder_name in folders:
-                    folders.append(new_folder_name)
-                self._cache_folder(new_folder_name)
+            folders = self.retriever.refresh_mail()
+            for folder in folders:
+                folder_name = new_folder[1].decode('utf-8').replace('/', '%')
+                if not folder_name in folders:
+                    cached_folders.append(folder_name)
+                self._cache_folder(folder_name)
             self._renew_state('/')
-        self._commit_state()
+            self._commit_state()
         
-        return folders
+        return self._get_cached_folders(self.cache_path)
     
     def list_mail(self, folder, force_refresh):
         folder_path = os.path.join(self.cache_path, folder)
@@ -87,6 +85,14 @@ class MailCache():
             mails = self.retriever.list_mail(folder)
         # TODO Implementation
         return []
+    
+    def _get_cached_folders(self, path):
+        folders = []
+        for folder in os.listdir(path):
+            folder_path = os.path.join(path, folder)
+            if os.path.isdir(folder_path):
+                folders.append((folder, self._get_cached_folders(folder_path)))
+        return folders
     
     def _is_stale(self, folder):
         if folder in self.cache_state:
