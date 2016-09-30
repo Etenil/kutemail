@@ -58,7 +58,7 @@ class MainWindow(QtWidgets.QMainWindow):
     
     def onRefresh(self):
         self.statusbar.showMessage("Refreshing...")
-        self.folders = self.mail_account.list_folders(force_refresh=True)
+        self.folders = self.mail_account.list_folders()
         self.statusbar.showMessage("")
         self.refreshTreeView()
     
@@ -67,13 +67,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.emails = self.mail_account.list_mail(folder_path)
         subjects = []
         for email in self.emails:
-            subjects.append(quopri.decodestring(email[1].get('subject')).decode("utf-8"))
+            subjects.append(quopri.decodestring(email.get('subject')).decode("utf-8"))
         self.listEmails.clear()
         self.listEmails.addItems(subjects)
     
     def onMailSelected(self, item):
         index = item.listWidget().row(item)
-        email = self.emails[index][1]
+        email = self.emails[index]
         document = QtGui.QTextDocument()
         if email.is_multipart():
             html = None

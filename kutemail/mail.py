@@ -16,7 +16,7 @@ class ImapMailRetriever():
     def __init__(self, host, username, password):
         self.imap_backend = IMAP4_SSL(host=host)
         self.imap_backend.login(username, password)
-    
+
     def refresh_mail(self):
         imap_folder_reg = re.compile(b'^\(.+\) "(.+)" "(.+)"$')
         folders = []
@@ -68,7 +68,6 @@ class MailCache():
     def list_folders(self, force_refresh):
         if force_refresh or self._is_stale('/'):
             folders = self.retriever.refresh_mail()
-            pprint(folders)
             for folder in folders:
                 folder_name = folder[1].decode('utf-8')
                 if not os.path.isdir(os.path.join(self.cache_path, folder_name)):
@@ -83,10 +82,18 @@ class MailCache():
         folder_path = os.path.join(self.cache_path, folder)
         if self._is_stale(folder) or force_refresh == True:
             mails = self.retriever.list_mail(folder)
-            pprint(mails)
-        mails = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
-        # TODO Implementation
-        return []
+            for mail in mails:
+                with open(os.path.join(folder_path, mail[0].decode('utf-8') + '.ml'), 'w') as mailcache:
+                    mailcache.write(mail[1].as_string())
+            self._renew_state(folder)
+        mails = []
+        mail_files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+        mailparser = emailparser.Parser()
+        for mail_file in mail_files:
+            with open(os.path.join(folder_path, mail_file), 'r') as mail_handle:
+                mails.append(mailparser.parse(mail_handle))
+        self._commit_state()
+        return mails
     
     def _get_cached_folders(self, path):
         folders = []
@@ -98,7 +105,7 @@ class MailCache():
     
     def _is_stale(self, folder):
         if folder in self.cache_state:
-            return self.cache_state[folder] > self.MAX_AGE
+            return time.time() - self.cache_state[folder] > self.MAX_AGE
         else:
             return True
     
