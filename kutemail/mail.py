@@ -68,10 +68,11 @@ class MailCache():
     def list_folders(self, force_refresh):
         if force_refresh or self._is_stale('/'):
             folders = self.retriever.refresh_mail()
+            pprint(folders)
             for folder in folders:
-                folder_name = new_folder[1].decode('utf-8').replace('/', '%')
-                if not folder_name in folders:
-                    cached_folders.append(folder_name)
+                folder_name = folder[1].decode('utf-8')
+                if not os.path.isdir(os.path.join(self.cache_path, folder_name)):
+                    os.makedirs(os.path.join(self.cache_path, folder_name))
                 self._cache_folder(folder_name)
             self._renew_state('/')
             self._commit_state()
@@ -80,9 +81,10 @@ class MailCache():
     
     def list_mail(self, folder, force_refresh):
         folder_path = os.path.join(self.cache_path, folder)
-        mails = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
         if self._is_stale(folder) or force_refresh == True:
             mails = self.retriever.list_mail(folder)
+            pprint(mails)
+        mails = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
         # TODO Implementation
         return []
     

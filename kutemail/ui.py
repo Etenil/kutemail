@@ -7,6 +7,8 @@ import quopri
 from .config import Config
 from .mail import MailAccount
 
+from pprint import pprint
+
 def ui_path(filename):
     basepath = os.path.dirname(os.path.realpath(__file__))
     return os.path.join(basepath, 'ui', filename)
@@ -37,7 +39,7 @@ class AccountDialog(QtWidgets.QDialog):
         }
 
 class MainWindow(QtWidgets.QMainWindow):
-    mail_retriever = None
+    mail_account = None
     config = None
     folders = []
     emails = []
@@ -56,12 +58,13 @@ class MainWindow(QtWidgets.QMainWindow):
     
     def onRefresh(self):
         self.statusbar.showMessage("Refreshing...")
-        self.folders = self.mail_retriever.list_folders(force_refresh=True)
+        self.folders = self.mail_account.list_folders(force_refresh=True)
         self.statusbar.showMessage("")
         self.refreshTreeView()
     
     def onFolderSelected(self, folder):
-        self.emails = self.mail_retriever.list_mails(folder.text(0))
+        folder_path = self._folder_to_path(folder).strip('/')
+        self.emails = self.mail_account.list_mail(folder_path)
         subjects = []
         for email in self.emails:
             subjects.append(quopri.decodestring(email[1].get('subject')).decode("utf-8"))
@@ -99,12 +102,36 @@ class MainWindow(QtWidgets.QMainWindow):
         self.emailPreview.setDocument(document)
     
     def refreshTreeView(self):
-        items = []
-        for folder in self.folders:
-            folder_item = QtWidgets.QTreeWidgetItem([folder], 0)
-            folder_item.setIcon(0, QtGui.QIcon.fromTheme('folder-mail'))
-            items.append(folder_item)
+        items = self._makeFolderTree(self.folders)
         self.treeMailWidget.insertTopLevelItems(0, items)
+        
+    def _makeFolderTree(self, folders, parent=None):
+        items = [];
+        for folder in folders:
+            if parent != None:
+                folder_item = QtWidgets.QTreeWidgetItem(parent, [folder[0]], 0)
+            else:
+                folder_item = QtWidgets.QTreeWidgetItem([folder[0]], 0)
+
+            icon = QtGui.QIcon.fromTheme('folder-mail')
+            if folder[0].lower() == 'inbox':
+                icon = QtGui.QIcon.fromTheme('mail-folder-inbox')
+            elif folder[0].lower() == 'junk' or folder[0].lower() == 'spam':                
+                icon = QtGui.QIcon.fromTheme('mail-mark-junk')
+            elif folder[0].lower() == 'trash':
+                icon = QtGui.QIcon.fromTheme('user-trash')
+            folder_item.setIcon(0, icon)
+            if len(folder[1]) > 0:
+                folder_item.addChildren(self._makeFolderTree(folder[1], parent=folder_item))
+            items.append(folder_item)
+        return items
+    
+    def _folder_to_path(self, folder):
+        text = ''
+        if folder.parent() is not None:
+            text = self._folder_to_path(folder.parent())
+        text += '/' + folder.text(0)
+        return text
     
     def showEvent(self, event):
         if not self.config.is_loaded():
@@ -116,5 +143,5 @@ class MainWindow(QtWidgets.QMainWindow):
             self.config.config['username'] = info['username']
             self.config.config['password'] = info['password']
             self.config.save()
-        self.mail_retriever = MailAccount(self.config.as_dict())
+        self.mail_account = MailAccount(self.config.as_dict())
         self.onRefresh()
